@@ -5,14 +5,19 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: true,
+  });
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 0);
@@ -21,15 +26,42 @@ export default function SignInPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) {
-      alert("Please enter email and password.");
-      return;
-    }
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setLoading(false);
-    alert("Signed in (mock)");
-    router.push("/");
+
+    try {
+      const { data, error } = await authClient.signIn.email(
+        {
+          email: formData.email,
+          password: formData.password,
+          rememberMe: formData.rememberMe,
+          callbackURL: "/dashboard",
+        },
+        {
+          onError: (ctx) => {
+            if (ctx.error.status === 403) {
+              setError("Please verify your email address");
+            } else {
+              setError(ctx.error.message || "Sign in failed");
+            }
+          },
+        }
+      );
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      // Successfully signed in
+      console.log("Signed in:", data);
+      router.push("/dashboard");
+    } catch (err) {
+      console.log(err);
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -46,8 +78,10 @@ export default function SignInPage() {
             </label>
             <Input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               placeholder="your@email.com"
               required
               className="bg-white text-black placeholder-gray-500 border border-gray-300 dark:bg-black dark:text-white dark:placeholder-gray-400 dark:border-gray-700"
@@ -61,8 +95,10 @@ export default function SignInPage() {
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 placeholder="••••••••"
                 required
                 className="pr-10 bg-white text-black placeholder-gray-500 border border-gray-300 dark:bg-black dark:text-white dark:placeholder-gray-400 dark:border-gray-700"
@@ -73,17 +109,32 @@ export default function SignInPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {mounted ? (showPassword ? <EyeOff size={18} /> : <Eye size={18} />) : null}
+                {mounted ? (
+                  showPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )
+                ) : null}
               </button>
             </div>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="submit" className="flex-1 bg-black text-white dark:bg-white dark:text-black" disabled={loading}>
+            <Button
+              type="submit"
+              className="flex-1 bg-black text-white dark:bg-white dark:text-black"
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Sign in"}
             </Button>
 
-            <Button type="button" variant="outline" className="flex-1" onClick={() => router.push("/signup")}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => router.push("/signup")}
+            >
               Create account
             </Button>
           </div>
