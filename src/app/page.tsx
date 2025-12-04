@@ -1,8 +1,19 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
 
-export default function Home() {
+export default async function Home() {
+  // Check if user is already authenticated
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+
+  if (session) {
+    redirect("/profile");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black">
       <main className="flex w-full max-w-3xl flex-col items-center gap-8 rounded-lg bg-white p-12 shadow-sm dark:bg-black">
