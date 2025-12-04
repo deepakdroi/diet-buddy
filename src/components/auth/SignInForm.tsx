@@ -26,14 +26,16 @@ export default function SignInForm() {
 
       if (result.error) {
         setError(result.error.message || "Sign in failed");
+        setLoading(false);
       } else {
-        router.push("/home");
+        // Wait for the session to be fully established before redirecting
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        router.push("/profile");
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign in failed";
       setError(message);
       console.error("Sign in error:", err);
-    } finally {
       setLoading(false);
     }
   }
