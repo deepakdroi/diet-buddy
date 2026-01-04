@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
-import { sendResetPasswordEmail } from "./email";
 
 const prisma = new PrismaClient();
 
@@ -17,7 +16,6 @@ export const auth = betterAuth({
     fields: {
       name: "name",
       email: "email",
-      emailVerified: "emailVerified",
       image: "image",
       createdAt: "createdAt",
       updatedAt: "updatedAt",
@@ -60,9 +58,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
     autoSignIn: true,
-    sendResetPassword: sendResetPasswordEmail,
   },
 });
 
