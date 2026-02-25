@@ -14,15 +14,19 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  password  String?
-  image     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  sessions  Session[]
-  accounts  Account[]
+  id                 String                  @id @default(cuid())
+  name               String
+  email              String                  @unique
+  password           String?
+  image              String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  sessions           Session[]
+  accounts           Account[]
+  metrics            UserMetrics?
+  activityLevel      UserActivityLevel?
+  goals              UserGoals?
+  dietaryPreferences UserDietaryPreferences?
 
   @@map("users")
 }
@@ -60,4 +64,150 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
+}
+
+// Baseline Body Metrics
+model UserMetrics {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age               Int
+  gender            Gender
+  height            Float // in cm
+  weight            Float // in kg
+  bodyFatPercentage Float? // optional
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("user_metrics")
+}
+
+// Activity Level
+model UserActivityLevel {
+  id                     String             @id @default(cuid())
+  userId                 String             @unique
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyActivityLevel     DailyActivityLevel
+  exerciseFrequency      ExerciseFrequency
+  exerciseTypes          String[] // JSON array of exercise types
+  averageWorkoutDuration WorkoutDuration
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  @@map("user_activity_levels")
+}
+
+// Goal Definition
+model UserGoals {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryGoal       PrimaryGoal
+  targetWeight      Float? // optional
+  timeline          Timeline
+  timelineDays      Int? // for custom timeline
+  urgencyPreference UrgencyPreference
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("user_goals")
+}
+
+// Dietary Preferences
+model UserDietaryPreferences {
+  id                    String                @id @default(cuid())
+  userId                String                @unique
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dietType              DietType
+  mealsPerDay           MealsPerDay
+  cookingTimePreference CookingTimePreference
+  budgetPreference      BudgetPreference
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@map("user_dietary_preferences")
+}
+
+// Enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DailyActivityLevel {
+  SEDENTARY // desk job, little movement
+  LIGHTLY_ACTIVE // light walking 5–7k steps/day
+  MODERATELY_ACTIVE // 8–12k steps/day
+  VERY_ACTIVE // physical job or 12k+ steps/day
+  ATHLETE // 2+ hrs intense training daily
+}
+
+enum ExerciseFrequency {
+  NO_EXERCISE // No exercise
+  ONE_TWO_DAYS // 1–2 days/week
+  THREE_FOUR_DAYS // 3–4 days/week
+  FIVE_SIX_DAYS // 5–6 days/week
+  DAILY // Daily
+}
+
+enum WorkoutDuration {
+  TWENTY_THIRTY // 20–30 min
+  THIRTY_FORTY_FIVE // 30–45 min
+  FORTY_FIVE_SIXTY // 45–60 min
+  SIXTY_NINETY // 60–90 min
+  NINETY_PLUS // 90+ min
+}
+
+enum PrimaryGoal {
+  LOSE_FAT // Lose fat
+  GAIN_MUSCLE // Gain muscle
+  RECOMPOSITION // lose fat + gain muscle
+  MAINTAIN_WEIGHT // Maintain weight
+  IMPROVE_ENDURANCE // Improve endurance
+  GENERAL_HEALTH // General health
+}
+
+enum Timeline {
+  FOUR_WEEKS // 4 weeks
+  EIGHT_WEEKS // 8 weeks
+  TWELVE_WEEKS // 12 weeks
+  SIXTEEN_PLUS // 16+ weeks
+  CUSTOM // Custom (enter days)
+}
+
+enum UrgencyPreference {
+  AGGRESSIVE // faster results, harder to maintain
+  MODERATE // recommended
+  SUSTAINABLE // slow but long-term
+}
+
+enum DietType {
+  VEGETARIAN
+  VEGAN
+  EGGETARIAN
+  NON_VEGETARIAN
+  KETO
+  LOW_CARB
+  NO_PREFERENCE
+}
+
+enum MealsPerDay {
+  TWO_MEALS // 2 meals
+  THREE_MEALS // 3 meals
+  FOUR_MEALS // 4 meals
+  FIVE_PLUS_MEALS // 5+ meals
+}
+
+enum CookingTimePreference {
+  UNDER_15_MINUTES // Under 15 minutes
+  THIRTY_MINUTES // 30 minutes
+  ONE_HOUR // 1 hour
+  DONT_MIND // Don't mind cooking
+}
+
+enum BudgetPreference {
+  BUDGET_FRIENDLY // Budget-friendly
+  MODERATE // Moderate
+  PREMIUM // Premium ingredients
 }
