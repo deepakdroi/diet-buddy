@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -10,27 +9,18 @@ import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const session = authClient.useSession();
 
-  useEffect(() => {
-    if (session.data) {
-      setIsAuthenticated(true);
-      setUserName(session.data.user.name || session.data.user.email);
-    } else {
-      setIsAuthenticated(false);
-      setUserName("");
-    }
-    setIsLoading(false);
-  }, [session.data]);
+  // Derive values from session instead of storing in state
+  const isAuthenticated = !!session.data;
+  const userName = session.data
+    ? session.data.user.name || session.data.user.email
+    : "";
+  const isLoading = session.isPending;
 
   async function handleSignOut() {
     try {
       await authClient.signOut();
-      setIsAuthenticated(false);
-      setUserName("");
       router.push("/");
     } catch (error) {
       console.error("Sign out failed:", error);

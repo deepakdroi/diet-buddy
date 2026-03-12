@@ -21,15 +21,28 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black">
-      <main className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm dark:bg-black">
-        <h1 className="mb-6 text-2xl font-semibold text-black dark:text-white">
-          Create an account
-        </h1>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Create an account
+          </h1>
 
-        <SignUpForm />
+          <SignUpForm />
 
-      </main>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Already have an account?{" "}
+              <a
+                href="/signin"
+                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                Sign in
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

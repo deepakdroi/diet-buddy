@@ -15,8 +15,8 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black">
-      <main className="flex w-full max-w-3xl flex-col items-center gap-8 rounded-lg bg-white p-12 shadow-sm dark:bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <main className="flex w-full max-w-3xl flex-col items-center gap-8 rounded-lg bg-white p-12 shadow-sm dark:bg-gray-800">
         <Logo size="lg" />
 
         <h1 className="text-4xl font-semibold leading-tight text-black dark:text-white">

@@ -16,20 +16,27 @@
   --foreground: #171717;
 }
 
+/* keep background white regardless of theme; only text/colors change */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f0f0f;
     --foreground: #f5f5f5;
   }
 }
 
 .dark {
-  --background: #0f0f0f;
   --foreground: #f5f5f5;
 }
 
 @layer base {
   body {
     @apply bg-background text-foreground;
+  }
+
+  select {
+    @apply bg-white text-gray-900;
+  }
+
+  .dark select {
+    @apply bg-gray-700 text-white;
   }
 }
