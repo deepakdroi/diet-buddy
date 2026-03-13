@@ -153,10 +153,10 @@ export default function ProfilePage() {
 
           {/* data sections card */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
-            {/* Body Info Card */}
+            {/* Body Stats Card */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Your Body Info
+                Your Body Stats
               </h2>
               <Button
                 variant="outline"
@@ -167,10 +167,10 @@ export default function ProfilePage() {
               </Button>
             </section>
 
-            {/* Activity Level Card */}
+            {/* Daily Activity Card */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Lifestyle Activity
+                Daily Activity
               </h2>
               <Button
                 variant="outline"
@@ -181,10 +181,10 @@ export default function ProfilePage() {
               </Button>
             </section>
 
-            {/* Dietary Preferences Card */}
+            {/* Food Preferences Card */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Diet Preferences
+                Food Preferences
               </h2>
               <Button
                 variant="outline"
@@ -203,10 +203,10 @@ export default function ProfilePage() {
           onClose={closeModal}
           title={
             modalType === "metrics"
-              ? "Body Information"
+              ? "Body Stats"
               : modalType === "activity"
-                ? "Activity Level"
-                : "Dietary Preferences"
+                ? "Daily Activity"
+                : "Food Preferences"
           }
         >
           {modalType === "metrics" && (
