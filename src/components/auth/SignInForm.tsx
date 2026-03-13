@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
+import { getAuthErrorMessage } from "@/lib/getAuthErrorMessage";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ export default function SignInForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,23 +29,46 @@ export default function SignInForm() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Sign in failed");
+        const message = getAuthErrorMessage(result.error);
+        setError(message);
+        toast({
+          title: "Sign in failed",
+          description: message,
+          variant: "error",
+        });
         setLoading(false);
-      } else {
-        // Wait for the session to be fully established before redirecting
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        router.push("/profile");
+        return;
       }
+
+      toast({
+        title: "Signed in",
+        description: "Taking you to your profile…",
+        variant: "success",
+        durationMs: 1600,
+      });
+
+      // Wait for the session to be fully established before redirecting
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      router.push("/profile");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign in failed";
+      const message = getAuthErrorMessage(err);
       setError(message);
+      toast({
+        title: "Sign in failed",
+        description: message,
+        variant: "error",
+      });
       console.error("Sign in error:", err);
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      aria-busy={loading}
+    >
       {error && (
         <div className="p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded text-sm">
           {error}
@@ -59,6 +85,7 @@ export default function SignInForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
+          disabled={loading}
         />
       </div>
 
@@ -73,11 +100,13 @@ export default function SignInForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
+            disabled={loading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            disabled={loading}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {showPassword ? "Hide" : "Show"}
           </button>

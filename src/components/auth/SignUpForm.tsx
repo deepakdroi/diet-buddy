@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
+import { getAuthErrorMessage } from "@/lib/getAuthErrorMessage";
 
 export default function SignUpForm() {
   const [name, setName] = useState("");
@@ -14,6 +16,7 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,8 +31,21 @@ export default function SignUpForm() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Sign up failed");
+        const message = getAuthErrorMessage(result.error);
+        setError(message);
+        toast({
+          title: "Sign up failed",
+          description: message,
+          variant: "error",
+        });
       } else {
+        toast({
+          title: "Account created",
+          description: "Redirecting to sign in…",
+          variant: "success",
+          durationMs: 1800,
+        });
+
         // Attempt to sync hashed password to User table
         try {
           fetch("/api/auth/sync-password", {
@@ -40,11 +56,18 @@ export default function SignUpForm() {
         } catch (e) {
           console.error("sync-password failed", e);
         }
+
+        await new Promise((resolve) => setTimeout(resolve, 900));
         router.push("/signin");
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign up failed";
+      const message = getAuthErrorMessage(err);
       setError(message);
+      toast({
+        title: "Sign up failed",
+        description: message,
+        variant: "error",
+      });
       console.error("Sign up error:", err);
     } finally {
       setLoading(false);
@@ -52,7 +75,11 @@ export default function SignUpForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      aria-busy={loading}
+    >
       {error && (
         <div className="p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded text-sm">
           {error}
@@ -67,6 +94,7 @@ export default function SignUpForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="John Doe"
+          disabled={loading}
         />
       </div>
 
@@ -80,6 +108,7 @@ export default function SignUpForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           required
+          disabled={loading}
         />
       </div>
 
@@ -94,11 +123,13 @@ export default function SignUpForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
+            disabled={loading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            disabled={loading}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {showPassword ? "Hide" : "Show"}
           </button>
