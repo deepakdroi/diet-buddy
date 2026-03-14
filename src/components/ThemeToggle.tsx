@@ -21,18 +21,17 @@ export default function ThemeToggle() {
       }
       aria-label="Toggle theme"
       className={
-        themeReady
-          ? resolvedTheme === "dark"
-            ? "bg-white text-black"
-            : "bg-black text-white"
-          : "opacity-0"
-      } // hide until ready and invert colors by theme
+        themeReady && resolvedTheme === "dark"
+          ? "bg-white text-black"
+          : "bg-black text-white"
+      }
+      suppressHydrationWarning
     >
       {themeReady ? (
         resolvedTheme === "dark" ? (
           <Sun className="h-4 w-4" />
         ) : (
-          <Moon className="h-4 w-4 text-white" />
+          <Moon className="h-4 w-4" />
         )
       ) : (
         // placeholder element of same size keeps structure stable

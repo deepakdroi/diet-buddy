@@ -1,0 +1,1 @@
+export type { UserDietaryPreferences as Diet } from "@prisma/client";

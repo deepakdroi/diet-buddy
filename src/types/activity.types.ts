@@ -1,0 +1,1 @@
+export type { UserActivityLevel as Activity } from "@prisma/client";

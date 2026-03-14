@@ -1,0 +1,1 @@
+export type { UserMetrics as Metrics } from "@prisma/client";
