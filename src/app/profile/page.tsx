@@ -13,6 +13,8 @@ import ProfileModals, {
 import { metricsSchema, type MetricsForm } from "@/schemas/user.schema";
 import { activitySchema, type ActivityForm } from "@/schemas/activity.schema";
 import { dietSchema, type DietForm } from "@/schemas/diet.schema";
+import { goalsSchema, type GoalsForm } from "@/schemas/goal.schema";
+import { type Goals } from "@/types/goal.types";
 import { type Metrics } from "@/types/user.types";
 import { type Activity } from "@/types/activity.types";
 import { type Diet } from "@/types/diet.types";
@@ -25,6 +27,9 @@ import {
   MealsPerDay,
   CookingTimePreference,
   BudgetPreference,
+  PrimaryGoal,
+  Timeline,
+  UrgencyPreference,
 } from "@prisma/client";
 import {
   getUserMetrics,
@@ -33,6 +38,8 @@ import {
   saveUserActivityLevel,
   getUserDietaryPreferences,
   saveUserDietaryPreferences,
+  getUserGoals,
+  saveUserGoals,
 } from "@/lib/profileHelpers";
 
 export default function ProfilePage() {
@@ -44,6 +51,7 @@ export default function ProfilePage() {
   const [metrics, setMetrics] = React.useState<Metrics | null>(null);
   const [activity, setActivity] = React.useState<Activity | null>(null);
   const [dietary, setDietary] = React.useState<Diet | null>(null);
+  const [goals, setGoals] = React.useState<Goals | null>(null);
 
   const [modalType, setModalType] = React.useState<ProfileModalType | null>(
     null,
@@ -81,6 +89,17 @@ export default function ProfilePage() {
     },
   });
 
+  const goalsForm = useForm<GoalsForm>({
+    resolver: zodResolver(goalsSchema),
+    defaultValues: {
+      primaryGoal: undefined,
+      targetWeight: undefined,
+      timeline: undefined,
+      timelineDays: undefined,
+      urgencyPreference: undefined,
+    },
+  });
+
   useEffect(() => {
     // Redirect to signin if not authenticated
     if (session.data === null) {
@@ -91,14 +110,20 @@ export default function ProfilePage() {
   useEffect(() => {
     // fetch profile-related data
     async function load() {
-      const [mRes, aRes, dRes] = await Promise.all([
-        getUserMetrics(),
-        getUserActivityLevel(),
-        getUserDietaryPreferences(),
-      ]);
-      if (mRes.metrics) setMetrics(mRes.metrics);
-      if (aRes.activityLevel) setActivity(aRes.activityLevel);
-      if (dRes.prefs) setDietary(dRes.prefs);
+      try {
+        const [mRes, aRes, dRes, gRes] = await Promise.all([
+          getUserMetrics(),
+          getUserActivityLevel(),
+          getUserDietaryPreferences(),
+          getUserGoals(),
+        ]);
+        if (mRes.metrics) setMetrics(mRes.metrics);
+        if (aRes.activityLevel) setActivity(aRes.activityLevel);
+        if (dRes.prefs) setDietary(dRes.prefs);
+        if (gRes.goals) setGoals(gRes.goals);
+      } catch (err) {
+        console.error("Error loading profile data", err);
+      }
     }
     load();
   }, []);
@@ -128,6 +153,19 @@ export default function ProfilePage() {
       case "diet":
         dietForm.reset(dietary || {});
         break;
+      case "goals":
+        goalsForm.reset(
+          goals
+            ? {
+                primaryGoal: goals.primaryGoal,
+                timeline: goals.timeline,
+                urgencyPreference: goals.urgencyPreference,
+                targetWeight: goals.targetWeight ?? undefined,
+                timelineDays: goals.timelineDays ?? undefined,
+              }
+            : {},
+        );
+        break;
     }
   };
 
@@ -136,6 +174,7 @@ export default function ProfilePage() {
     metricsForm.reset();
     activityForm.reset();
     dietForm.reset();
+    goalsForm.reset();
   };
 
   const onSubmitMetrics = async (data: MetricsForm) => {
@@ -220,6 +259,37 @@ export default function ProfilePage() {
     }
   };
 
+  const onSubmitGoals = async (data: GoalsForm) => {
+    try {
+      await saveUserGoals({
+        ...data,
+        primaryGoal: data.primaryGoal as PrimaryGoal,
+        timeline: data.timeline as Timeline,
+        urgencyPreference: data.urgencyPreference as UrgencyPreference,
+        targetWeight: data.targetWeight ?? null,
+        timelineDays: data.timelineDays ?? null,
+      });
+
+      toast({
+        title: "Goals Updated",
+        description: "Your goals have been saved successfully.",
+        variant: "success",
+      });
+
+      const gRes = await getUserGoals();
+      setGoals(gRes.goals);
+
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error Saving Goals",
+        description: "There was an error saving your goals.",
+        variant: "error",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
       <div className="w-full max-w-2xl">
@@ -257,6 +327,19 @@ export default function ProfilePage() {
                 <p>{new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
+            {/* User Goals Card */}
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Your Goals
+              </h2>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => openModal("goals")}
+              >
+                {goals ? "Update" : "Add"}
+              </Button>
+            </section>
           </div>
 
           {/* data sections card */}
@@ -311,9 +394,11 @@ export default function ProfilePage() {
           metricsForm={metricsForm}
           activityForm={activityForm}
           dietForm={dietForm}
+          goalsForm={goalsForm}
           onSubmitMetrics={onSubmitMetrics}
           onSubmitActivity={onSubmitActivity}
           onSubmitDiet={onSubmitDiet}
+          onSubmitGoals={onSubmitGoals}
         />
       </div>
     </div>

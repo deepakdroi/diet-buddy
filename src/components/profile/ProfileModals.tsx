@@ -8,8 +8,9 @@ import type { UseFormReturn } from "react-hook-form";
 import type { MetricsForm } from "@/schemas/user.schema";
 import type { ActivityForm } from "@/schemas/activity.schema";
 import type { DietForm } from "@/schemas/diet.schema";
+import type { GoalsForm } from "@/schemas/goal.schema";
 
-export type ProfileModalType = "metrics" | "activity" | "diet";
+export type ProfileModalType = "metrics" | "activity" | "diet" | "goals";
 
 export type ProfileModalsProps = {
   modalType: ProfileModalType | null;
@@ -17,9 +18,11 @@ export type ProfileModalsProps = {
   metricsForm: UseFormReturn<MetricsForm>;
   activityForm: UseFormReturn<ActivityForm>;
   dietForm: UseFormReturn<DietForm>;
+  goalsForm: UseFormReturn<GoalsForm>;
   onSubmitMetrics: (data: MetricsForm) => void | Promise<void>;
   onSubmitActivity: (data: ActivityForm) => void | Promise<void>;
   onSubmitDiet: (data: DietForm) => void | Promise<void>;
+  onSubmitGoals: (data: GoalsForm) => void;
 };
 
 export default function ProfileModals({
@@ -28,9 +31,11 @@ export default function ProfileModals({
   metricsForm,
   activityForm,
   dietForm,
+  goalsForm,
   onSubmitMetrics,
   onSubmitActivity,
   onSubmitDiet,
+  onSubmitGoals,
 }: ProfileModalsProps) {
   return (
     <Modal
@@ -41,7 +46,9 @@ export default function ProfileModals({
           ? "Body Stats"
           : modalType === "activity"
             ? "Daily Activity"
-            : "Food Preferences"
+            : modalType === "diet"
+              ? "Food Preferences"
+              : "Your Goals"
       }
     >
       {modalType === "metrics" && (
@@ -323,6 +330,94 @@ export default function ProfileModals({
             <Button
               type="submit"
               variant="default"
+              className="bg-black text-white dark:bg-white dark:text-black"
+            >
+              Save
+            </Button>
+          </div>
+        </form>
+      )}
+      {modalType === "goals" && (
+        <form
+          onSubmit={goalsForm.handleSubmit(onSubmitGoals)}
+          className="space-y-4"
+        >
+          {/* Primary Goal */}
+          <div>
+            <Label>Primary Goal</Label>
+            <select
+              className="mt-1 block w-full"
+              {...goalsForm.register("primaryGoal")}
+            >
+              <option value="">-- select --</option>
+              <option value="LOSE_FAT">Lose Fat</option>
+              <option value="GAIN_MUSCLE">Gain Muscle</option>
+              <option value="RECOMPOSITION">Recomposition</option>
+              <option value="MAINTAIN_WEIGHT">Maintain Weight</option>
+              <option value="IMPROVE_ENDURANCE">Improve Endurance</option>
+              <option value="GENERAL_HEALTH">General Health</option>
+            </select>
+          </div>
+
+          {/* Target Weight */}
+          <div>
+            <Label>Target Weight (optional)</Label>
+            <Input
+              type="number"
+              step="0.1"
+              {...goalsForm.register("targetWeight", {
+                valueAsNumber: true,
+              })}
+            />
+          </div>
+
+          {/* Timeline */}
+          <div>
+            <Label>Timeline</Label>
+            <select
+              className="mt-1 block w-full"
+              {...goalsForm.register("timeline")}
+            >
+              <option value="">-- select --</option>
+              <option value="FOUR_WEEKS">4 weeks</option>
+              <option value="EIGHT_WEEKS">8 weeks</option>
+              <option value="TWELVE_WEEKS">12 weeks</option>
+              <option value="SIXTEEN_PLUS">16+ weeks</option>
+              <option value="CUSTOM">Custom</option>
+            </select>
+          </div>
+
+          {/* Timeline Days (conditional) */}
+          {goalsForm.watch("timeline") === "CUSTOM" && (
+            <div>
+              <Label>Custom Days</Label>
+              <Input
+                type="number"
+                {...goalsForm.register("timelineDays", {
+                  valueAsNumber: true,
+                })}
+              />
+            </div>
+          )}
+
+          {/* Urgency */}
+          <div>
+            <Label>Urgency</Label>
+            <select
+              className="mt-1 block w-full"
+              {...goalsForm.register("urgencyPreference")}
+            >
+              <option value="">-- select --</option>
+              <option value="AGGRESSIVE">Aggressive</option>
+              <option value="MODERATE">Moderate</option>
+              <option value="SUSTAINABLE">Sustainable</option>
+            </select>
+          </div>
+
+          {/* Submit */}
+          <div className="flex justify-end">
+            <Button
+              type="submit"
               className="bg-black text-white dark:bg-white dark:text-black"
             >
               Save

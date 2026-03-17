@@ -2,6 +2,7 @@ import type {
   UserMetrics,
   UserActivityLevel,
   UserDietaryPreferences,
+  UserGoals,
 } from "@prisma/client";
 
 export async function getUserMetrics(): Promise<{
@@ -67,5 +68,29 @@ export async function saveUserDietaryPreferences(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return res.json();
+}
+
+export async function getUserGoals(): Promise<{
+  goals: UserGoals | null;
+}> {
+  const res = await fetch(`/api/user/goals`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+
+  return res.json();
+}
+
+export async function saveUserGoals(
+  data: Partial<UserGoals>,
+): Promise<{ goals: UserGoals }> {
+  const res = await fetch(`/api/user/goals`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
   return res.json();
 }
