@@ -279,6 +279,36 @@ export default function ProfilePage() {
       const gRes = await getUserGoals();
       setGoals(gRes.goals);
 
+      // ai integration - call diet generation endpoint if all data is present
+      if (metrics && activity && dietary && gRes.goals) {
+        const payload = {
+          metrics,
+          activity,
+          goals: gRes.goals,
+          diet: dietary,
+        };
+
+        console.log("📤 Sending to AI:", payload);
+
+        const res = await fetch("/api/diet/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+
+        console.log("🔥 AI RESPONSE:", result.plan);
+      } else {
+        toast({
+          title: "AI Diet Plan Skipped",
+          description: "Error faced while making api call.",
+          variant: "error",
+        });
+      }
+
       closeModal();
     } catch (err) {
       console.error(err);

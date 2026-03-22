@@ -175,10 +175,10 @@ export default function ProfileModals({
               {...activityForm.register("exerciseFrequency")}
             >
               <option value="">-- select --</option>
-              <option value="NONE">None</option>
-              <option value="ONE_TWO">1-2 days/week</option>
-              <option value="THREE_FOUR">3-4 days/week</option>
-              <option value="FIVE_SIX">5-6 days/week</option>
+              <option value="NO_EXERCISE">None</option>
+              <option value="ONE_TWO_DAYS">1-2 days/week</option>
+              <option value="THREE_FOUR_DAYS">3-4 days/week</option>
+              <option value="FIVE_SIX_DAYS">5-6 days/week</option>
               <option value="DAILY">Daily</option>
             </select>
             {activityForm.formState.errors.exerciseFrequency && (

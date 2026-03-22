@@ -44,20 +44,20 @@ export async function POST(request: NextRequest) {
       exerciseTypes,
       averageWorkoutDuration,
     } = body;
-
+    const safeExerciseTypes = exerciseTypes ?? [];
     const activityLevel = await prisma.userActivityLevel.upsert({
       where: { userId: session.user.id },
       update: {
         dailyActivityLevel,
         exerciseFrequency,
-        exerciseTypes,
+        exerciseTypes: safeExerciseTypes,
         averageWorkoutDuration,
       },
       create: {
         userId: session.user.id,
         dailyActivityLevel,
         exerciseFrequency,
-        exerciseTypes,
+        exerciseTypes: safeExerciseTypes,
         averageWorkoutDuration,
       },
     });
