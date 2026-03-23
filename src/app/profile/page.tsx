@@ -261,14 +261,19 @@ export default function ProfilePage() {
 
   const onSubmitGoals = async (data: GoalsForm) => {
     try {
-      await saveUserGoals({
+      const normalizedGoals = {
         ...data,
         primaryGoal: data.primaryGoal as PrimaryGoal,
         timeline: data.timeline as Timeline,
         urgencyPreference: data.urgencyPreference as UrgencyPreference,
         targetWeight: data.targetWeight ?? null,
-        timelineDays: data.timelineDays ?? null,
-      });
+        timelineDays:
+          data.timeline === "CUSTOM"
+            ? (data.timelineDays ?? undefined)
+            : undefined,
+      };
+
+      await saveUserGoals(normalizedGoals);
 
       toast({
         title: "Goals Updated",
