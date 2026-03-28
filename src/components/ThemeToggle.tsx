@@ -1,41 +1,39 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Sun, Moon } from "lucide-react";
 
+const emptySubscribe = () => () => {};
+
 export default function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
-  // Render a button even before the theme is resolved so the markup
-  // matches between server and client. The icon remains invisible until
-  // hydration completes, avoiding mismatch errors.
-  const themeReady = resolvedTheme !== undefined;
+  const isDark = mounted && resolvedTheme === "dark";
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() =>
-        setTheme(themeReady && resolvedTheme === "dark" ? "light" : "dark")
-      }
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
-      className={
-        themeReady && resolvedTheme === "dark"
-          ? "bg-white text-black"
-          : "bg-black text-white"
-      }
+      className={isDark ? "bg-white text-black" : "bg-black text-white"}
       suppressHydrationWarning
     >
-      {themeReady ? (
-        resolvedTheme === "dark" ? (
+      {mounted ? (
+        isDark ? (
           <Sun className="h-4 w-4" />
         ) : (
           <Moon className="h-4 w-4" />
         )
       ) : (
-        // placeholder element of same size keeps structure stable
-        <Sun className="h-4 w-4 opacity-0" />
+        <span className="h-4 w-4" aria-hidden="true" />
       )}
     </Button>
   );
