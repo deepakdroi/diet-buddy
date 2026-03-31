@@ -9,6 +9,8 @@ export type UserData = {
   activity: {
     dailyActivityLevel: string;
     exerciseFrequency: string;
+    exerciseTypes: string[];
+    averageWorkoutDuration: string;
   };
   goals: {
     primaryGoal: string;
@@ -20,6 +22,7 @@ export type UserData = {
   diet: {
     dietType: string;
     mealsPerDay: string;
+    cookingTimePreference: string;
     budgetPreference: string;
   };
 };

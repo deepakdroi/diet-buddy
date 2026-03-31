@@ -29,7 +29,7 @@ export const activitySchema = z.object({
         ].includes(val),
       "Please select exercise frequency",
     ),
-  exerciseTypes: z.array(z.string()).optional(),
+  exerciseTypes: z.array(z.string()),
   averageWorkoutDuration: z
     .string()
     .refine(

@@ -8,11 +8,11 @@ export async function generateDietPlan(userData: UserData) {
   const response = await callSarvam([
     {
       role: "system",
-      content: "You are an expert Indian dietician.",
+      content: prompt.systemPrompt,
     },
     {
       role: "user",
-      content: prompt,
+      content: prompt.userPrompt,
     },
   ]);
 
