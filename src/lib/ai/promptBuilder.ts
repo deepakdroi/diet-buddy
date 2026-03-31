@@ -4,99 +4,67 @@ export function buildDietPrompt(userData: UserData) {
   const { metrics, activity, goals, diet } = userData;
 
   const systemPrompt = `
-You are an expert Indian dietician and nutritionist with 20+ years of experience.
-You specialize in creating practical, culturally appropriate Indian meal plans.
+You are a highly experienced Indian Nutritionist and Dietician (20+ years experience).
+Your goal is to create a scientifically accurate, culturally relevant Indian meal plan based on specific user data.
 
-STRICT RULES:
-1. Respond ONLY with a valid JSON object — no explanation, no markdown, no <think> tags, no text before or after the JSON.
-2. Use ONLY Indian foods and ingredients.
-3. All nutritional values must be realistic and accurate.
-4. Meal count must exactly match the user's mealsPerDay.
-5. Total meal calories must sum up to dailyCalorieTarget (±50 kcal tolerance).
-6. Protein sources must suit the user's dietType (e.g. no meat for vegetarians).
-7. mealType must be one of: BREAKFAST, MID_MORNING_SNACK, LUNCH, EVENING_SNACK, DINNER, POST_WORKOUT.
-8. unit must be one of: g, ml, cup, pieces, scoop, tbsp, tsp, bowl.
-9. guideline category must be one of: hydration, sleep, general, food_timing, exercise.
+STRICT OPERATIONAL RULES:
+1. OUTPUT FORMAT: Respond ONLY with a single, valid JSON object. No markdown, no "here is your plan," no conversational text.
+2. LANGUAGE: Use common Indian food names (e.g., "Moong Dal Khichdi" instead of "Lentil Porridge").
+3. ACCURACY: Nutritional calculations must be realistic for the portion sizes provided.
+4. COMPLIANCE: The meal plan MUST strictly follow the user's Diet Type, Budget, and Cooking Time constraints.
+5. NO REASONING: Do not include <think> tags or step-by-step logic in the output.
 `;
 
   const userPrompt = `
-Create a personalized Indian diet plan for this user:
+Generate a comprehensive Indian Diet Plan based on the following profile:
 
-=== USER PROFILE ===
-Age: ${metrics.age} years
-Gender: ${metrics.gender}
-Height: ${metrics.height} cm
-Weight: ${metrics.weight} kg
-Body Fat: ${metrics.bodyFatPercentage ?? "Not provided"}%
+### 1. PHYSICAL METRICS
+- Gender: ${metrics.gender}
+- Age: ${metrics.age} years
+- Height: ${metrics.height} cm | Weight: ${metrics.weight} kg
+- Body Fat: ${metrics.bodyFatPercentage ? metrics.bodyFatPercentage + "%" : "Not specified"}
 
-=== ACTIVITY ===
-Daily Activity Level: ${activity.dailyActivityLevel}
-Exercise Frequency: ${activity.exerciseFrequency}
-Exercise Types: ${activity.exerciseTypes.join(", ") || "Not specified"}
-Avg Workout Duration: ${activity.averageWorkoutDuration}
+### 2. ACTIVITY & EXERCISE
+- Daily Activity Level: ${activity.dailyActivityLevel} (Context: SEDENTARY=desk job, ATHLETE=2+ hrs intense)
+- Exercise Frequency: ${activity.exerciseFrequency}
+- Typical Workout: ${activity.exerciseTypes.join(", ") || "General movement"}
+- Avg Duration: ${activity.averageWorkoutDuration}
 
-=== GOALS ===
-Primary Goal: ${goals.primaryGoal}
-Target Weight: ${goals.targetWeight ?? "Not specified"} kg
-Timeline: ${goals.timeline}
-Urgency: ${goals.urgencyPreference}
+### 3. GOALS & TIMELINE
+- Primary Goal: ${goals.primaryGoal}
+- Target Weight: ${goals.targetWeight ? goals.targetWeight + " kg" : "Maintenance"}
+- Timeline: ${goals.timeline}${goals.timelineDays ? ` (${goals.timelineDays} days)` : ""}
+- Approach: ${goals.urgencyPreference} (AGGRESSIVE, MODERATE, or SUSTAINABLE)
 
-=== DIETARY PREFERENCES ===
-Diet Type: ${diet.dietType}
-Meals Per Day: ${diet.mealsPerDay}
-Cooking Time Preference: ${diet.cookingTimePreference}
-Budget: ${diet.budgetPreference}
+### 4. DIETARY PREFERENCES
+- Diet Type: ${diet.dietType} (STRICTLY follow this: e.g., VEGETARIAN means no meat/eggs, EGGETARIAN includes eggs but no meat)
+- Meal Frequency: ${diet.mealsPerDay}
+- Cooking Constraint: ${diet.cookingTimePreference}
+- Budget Level: ${diet.budgetPreference}
 
-=== REQUIRED JSON STRUCTURE ===
+### REQUIRED JSON STRUCTURE
+Return the data in this exact structure:
 {
   "dietPlan": {
     "calculations": {
       "bmr": number,
       "tdee": number,
-      "activityMultiplier": number,
-      "caloricDeficit": number,
       "dailyCalorieTarget": number,
-      "weeklyWeightLossKg": number
-    },
-    "macros": {
-      "dailyCalories": number,
-      "proteinG": number,
-      "proteinPercent": number,
-      "carbsG": number,
-      "carbsPercent": number,
-      "fatsG": number,
-      "fatsPercent": number
+      "macros": { "proteinG": number, "carbsG": number, "fatsG": number }
     },
     "meals": [
       {
-        "mealType": string,
-        "mealName": string,
-        "timeSlot": string,
-        "order": number,
+        "mealType": "BREAKFAST | LUNCH | EVENING_SNACK | DINNER | etc",
+        "mealName": "string",
+        "timeSlot": "string",
         "totalCalories": number,
-        "totalProteinG": number,
-        "totalCarbsG": number,
-        "totalFatsG": number,
         "foods": [
-          {
-            "name": string,
-            "quantity": number,
-            "unit": string,
-            "preparation": string | null,
-            "calories": number,
-            "proteinG": number,
-            "carbsG": number,
-            "fatsG": number
-          }
+          { "name": "string", "quantity": number, "unit": "g | ml | cup | pieces", "proteinG": number, "calories": number }
         ]
       }
     ],
     "guidelines": [
-      {
-        "category": string,
-        "note": string,
-        "order": number
-      }
+      { "category": "hydration | sleep | general", "note": "string" }
     ]
   }
 }

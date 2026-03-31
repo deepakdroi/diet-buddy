@@ -9,11 +9,20 @@ export async function POST(req: Request) {
 
     console.log("🔥 GENERATED DIET PLAN:\n", plan);
 
-    return NextResponse.json({ plan });
-  } catch (err) {
+    let finalPlan = plan;
+    if (typeof plan === "string") {
+      try {
+        finalPlan = JSON.parse(plan.replace(/```json|```/g, "").trim());
+      } catch (e) {
+        console.error("Manual parse failed in route:", e);
+      }
+    }
+
+    return NextResponse.json({ plan: finalPlan });
+  } catch (err: any) {
     console.error("Diet generation error:", err);
     return NextResponse.json(
-      { error: "Failed to generate diet plan" },
+      { error: err.message || "Failed to generate diet plan" },
       { status: 500 },
     );
   }
