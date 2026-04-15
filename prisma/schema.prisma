@@ -27,6 +27,7 @@ model User {
   activityLevel      UserActivityLevel?
   goals              UserGoals?
   dietaryPreferences UserDietaryPreferences?
+  dietPlans          DietPlan[]
 
   @@map("users")
 }
@@ -126,6 +127,82 @@ model UserDietaryPreferences {
   updatedAt             DateTime              @updatedAt
 
   @@map("user_dietary_preferences")
+}
+
+// Diet Plan
+model DietPlan {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Calculations flattened from the JSON
+  bmr                Float
+  tdee               Float
+  dailyCalorieTarget Float
+  proteinG           Float
+  carbsG             Float
+  fatsG              Float
+
+  // Relations
+  meals      Meal[]
+  guidelines Guideline[]
+  isActive   Boolean     @default(true) // Helpful if they generate multiple plans over time
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("diet_plans")
+}
+
+model Meal {
+  id         String   @id @default(cuid())
+  dietPlanId String
+  dietPlan   DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+
+  mealType      MealType
+  mealName      String
+  timeSlot      String
+  totalCalories Float
+
+  foods Food[]
+
+  @@map("meals")
+}
+
+model Food {
+  id     String @id @default(cuid())
+  mealId String
+  meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  name     String
+  quantity Float
+  unit     String
+  proteinG Float
+  calories Float
+
+  @@map("foods")
+}
+
+model Guideline {
+  id         String   @id @default(cuid())
+  dietPlanId String
+  dietPlan   DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+
+  category String
+  note     String @db.Text // Use Text since guidelines can be long
+
+  @@map("guidelines")
+}
+
+// Added extra standard meal types just in case future generations use them
+enum MealType {
+  BREAKFAST
+  MID_MORNING_SNACK
+  LUNCH
+  EVENING_SNACK
+  DINNER
+  PRE_WORKOUT_SNACK
+  POST_WORKOUT_SNACK
 }
 
 // Enums
