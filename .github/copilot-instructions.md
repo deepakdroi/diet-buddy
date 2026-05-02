@@ -64,3 +64,9 @@ If you need more context
 If something is missing or unclear, ask: What change are you making and which files should remain stable? That helps keep PRs small and safe.
 
 — End of instructions —
+
+## graphify
+
+Before answering architecture or codebase questions, read `graphify-out/GRAPH_REPORT.md` if it exists.
+If `graphify-out/wiki/index.md` exists, navigate it for deep questions.
+Type `/graphify` in Copilot Chat to build or update the knowledge graph.
