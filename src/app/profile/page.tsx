@@ -40,6 +40,8 @@ import {
   saveUserDietaryPreferences,
   getUserGoals,
   saveUserGoals,
+  getLatestDietPlan,
+  type DietPlanWithRelations,
 } from "@/lib/profileHelpers";
 
 export default function ProfilePage() {
@@ -52,6 +54,9 @@ export default function ProfilePage() {
   const [activity, setActivity] = React.useState<Activity | null>(null);
   const [dietary, setDietary] = React.useState<Diet | null>(null);
   const [goals, setGoals] = React.useState<Goals | null>(null);
+  const [dietPlan, setDietPlan] = React.useState<DietPlanWithRelations | null>(
+    null,
+  );
 
   const [modalType, setModalType] = React.useState<ProfileModalType | null>(
     null,
@@ -111,16 +116,18 @@ export default function ProfilePage() {
     // fetch profile-related data
     async function load() {
       try {
-        const [mRes, aRes, dRes, gRes] = await Promise.all([
+        const [mRes, aRes, dRes, gRes, planRes] = await Promise.all([
           getUserMetrics(),
           getUserActivityLevel(),
           getUserDietaryPreferences(),
           getUserGoals(),
+          getLatestDietPlan(),
         ]);
         if (mRes.metrics) setMetrics(mRes.metrics);
         if (aRes.activityLevel) setActivity(aRes.activityLevel);
         if (dRes.prefs) setDietary(dRes.prefs);
         if (gRes.goals) setGoals(gRes.goals);
+        if (planRes.dietPlan) setDietPlan(planRes.dietPlan);
       } catch (err) {
         console.error("Error loading profile data", err);
       }
@@ -284,7 +291,6 @@ export default function ProfilePage() {
       const gRes = await getUserGoals();
       setGoals(gRes.goals);
 
-      // ai integration - call diet generation endpoint if all data is present
       if (metrics && activity && dietary && gRes.goals) {
         const payload = {
           metrics,
@@ -304,12 +310,41 @@ export default function ProfilePage() {
         });
 
         const result = await res.json();
-
         console.log("🔥 AI RESPONSE:", result.plan);
+
+        if (result?.plan) {
+          const saveRes = await fetch("/api/user/diet-plan", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ plan: result.plan }),
+          });
+
+          const saveResult = await saveRes.json();
+
+          if (!saveRes.ok) {
+            throw new Error(saveResult.error || "Failed to save diet plan");
+          }
+
+          setDietPlan(saveResult.dietPlan);
+          toast({
+            title: "Diet Plan Generated",
+            description: "Your AI diet plan was saved successfully.",
+            variant: "success",
+          });
+        } else {
+          toast({
+            title: "Diet Plan Missing",
+            description: "AI did not return a valid diet plan.",
+            variant: "error",
+          });
+        }
       } else {
         toast({
           title: "AI Diet Plan Skipped",
-          description: "Error faced while making api call.",
+          description:
+            "Please complete your profile details before generating a diet plan.",
           variant: "error",
         });
       }
@@ -335,6 +370,11 @@ export default function ProfilePage() {
           <p className="text-gray-600 dark:text-gray-400">
             View and manage your profile information below.
           </p>
+          <div className="mt-4">
+            <Button variant="outline" onClick={() => openModal("dietPlan")}>
+              View Diet Plan
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -362,8 +402,7 @@ export default function ProfilePage() {
                 <p>{new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
-            {/* User Goals Card */}
-            <section>
+            <section className="mt-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Your Goals
               </h2>
@@ -377,9 +416,7 @@ export default function ProfilePage() {
             </section>
           </div>
 
-          {/* data sections card */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
-            {/* Body Stats Card */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Your Body Stats
@@ -393,7 +430,6 @@ export default function ProfilePage() {
               </Button>
             </section>
 
-            {/* Daily Activity Card */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Daily Activity
@@ -407,7 +443,6 @@ export default function ProfilePage() {
               </Button>
             </section>
 
-            {/* Food Preferences Card */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Food Preferences
@@ -430,6 +465,7 @@ export default function ProfilePage() {
           activityForm={activityForm}
           dietForm={dietForm}
           goalsForm={goalsForm}
+          dietPlan={dietPlan}
           onSubmitMetrics={onSubmitMetrics}
           onSubmitActivity={onSubmitActivity}
           onSubmitDiet={onSubmitDiet}

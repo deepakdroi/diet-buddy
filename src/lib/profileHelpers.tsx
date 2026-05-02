@@ -1,4 +1,8 @@
 import type {
+  DietPlan,
+  Food,
+  Guideline,
+  Meal,
   UserMetrics,
   UserActivityLevel,
   UserDietaryPreferences,
@@ -50,6 +54,11 @@ export const saveUserDietaryPreferences = (
     body: JSON.stringify(data),
   });
 
+export type DietPlanWithRelations = DietPlan & {
+  meals: (Meal & { foods: Food[] })[];
+  guidelines: Guideline[];
+};
+
 export const getUserGoals = () =>
   apiFetch<{ goals: UserGoals | null }>(`/api/user/goals`, {
     method: "GET",
@@ -62,4 +71,10 @@ export const saveUserGoals = (data: Partial<UserGoals>) =>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+  });
+
+export const getLatestDietPlan = () =>
+  apiFetch<{ dietPlan: DietPlanWithRelations | null }>(`/api/user/diet-plan`, {
+    method: "GET",
+    cache: "no-store",
   });

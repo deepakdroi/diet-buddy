@@ -9,8 +9,19 @@ import type { MetricsForm } from "@/schemas/user.schema";
 import type { ActivityForm } from "@/schemas/activity.schema";
 import type { DietForm } from "@/schemas/diet.schema";
 import type { GoalsForm } from "@/schemas/goal.schema";
+import type { DietPlan, Guideline, Meal, Food } from "@prisma/client";
 
-export type ProfileModalType = "metrics" | "activity" | "diet" | "goals";
+export type ProfileModalType =
+  | "metrics"
+  | "activity"
+  | "diet"
+  | "goals"
+  | "dietPlan";
+
+export type DietPlanWithRelations = DietPlan & {
+  meals: (Meal & { foods: Food[] })[];
+  guidelines: Guideline[];
+};
 
 export type ProfileModalsProps = {
   modalType: ProfileModalType | null;
@@ -19,10 +30,11 @@ export type ProfileModalsProps = {
   activityForm: UseFormReturn<ActivityForm>;
   dietForm: UseFormReturn<DietForm>;
   goalsForm: UseFormReturn<GoalsForm>;
+  dietPlan?: DietPlanWithRelations | null;
   onSubmitMetrics: (data: MetricsForm) => void | Promise<void>;
   onSubmitActivity: (data: ActivityForm) => void | Promise<void>;
   onSubmitDiet: (data: DietForm) => void | Promise<void>;
-  onSubmitGoals: (data: GoalsForm) => void;
+  onSubmitGoals: (data: GoalsForm) => void | Promise<void>;
 };
 
 export default function ProfileModals({
@@ -32,6 +44,7 @@ export default function ProfileModals({
   activityForm,
   dietForm,
   goalsForm,
+  dietPlan,
   onSubmitMetrics,
   onSubmitActivity,
   onSubmitDiet,
@@ -48,7 +61,9 @@ export default function ProfileModals({
             ? "Daily Activity"
             : modalType === "diet"
               ? "Food Preferences"
-              : "Your Goals"
+              : modalType === "goals"
+                ? "Your Goals"
+                : "Diet Plan"
       }
     >
       {modalType === "metrics" && (
@@ -336,6 +351,136 @@ export default function ProfileModals({
             </Button>
           </div>
         </form>
+      )}
+
+      {modalType === "dietPlan" && (
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+          {!dietPlan ? (
+            <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+              <p>
+                No active diet plan found yet. Save your goals to generate one.
+              </p>
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <section className="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Plan Summary
+                </h2>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      TDEE
+                    </p>
+                    <p className="mt-2 text-xl font-semibold">
+                      {dietPlan.tdee.toFixed(0)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Daily Calories
+                    </p>
+                    <p className="mt-2 text-xl font-semibold">
+                      {dietPlan.dailyCalorieTarget.toFixed(0)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Macros
+                    </p>
+                    <p className="mt-2 text-sm">
+                      P {dietPlan.proteinG.toFixed(0)}g / C{" "}
+                      {dietPlan.carbsG.toFixed(0)}g / F{" "}
+                      {dietPlan.fatsG.toFixed(0)}g
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Meals
+                </h3>
+                <div className="space-y-3">
+                  {dietPlan.meals.map((meal) => (
+                    <details
+                      key={meal.id}
+                      className="group rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+                    >
+                      <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span>{meal.mealName}</span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {meal.timeSlot || "Time not set"}
+                        </span>
+                      </summary>
+                      <div className="mt-4 space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                        <p className="font-medium">
+                          Total Calories: {meal.totalCalories.toFixed(0)}
+                        </p>
+                        <div className="space-y-2">
+                          {meal.foods.map((food) => (
+                            <div
+                              key={food.id}
+                              className="rounded-xl bg-gray-50 dark:bg-gray-950 p-3"
+                            >
+                              <div className="flex justify-between gap-4">
+                                <p className="font-medium">{food.name}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {food.quantity}
+                                  {food.unit ? ` ${food.unit}` : ""}
+                                </p>
+                              </div>
+                              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Protein: {food.proteinG.toFixed(0)}g · Calories:{" "}
+                                {food.calories.toFixed(0)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Guidelines
+                </h3>
+                <div className="space-y-2">
+                  {dietPlan.guidelines.map((guideline) => (
+                    <div
+                      key={guideline.id}
+                      className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 p-4"
+                    >
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        {guideline.category}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                        {guideline.note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4 text-sm text-gray-700 dark:text-gray-300">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  Tips
+                </h3>
+                <p className="mt-2">
+                  Stay hydrated and aim for 7-8 hours of sleep each night to
+                  support recovery and energy.
+                </p>
+              </section>
+            </>
+          )}
+        </div>
       )}
       {modalType === "goals" && (
         <form
